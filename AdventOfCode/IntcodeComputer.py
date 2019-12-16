@@ -169,7 +169,7 @@ class IntCode:
 
     def do_output(self):
         params = self.get_params(1)
-        print('Output = {}'.format(params[0]))
+        # print('Output = {}'.format(params[0]))
         self.outputs.append(params[0])
         self.update_pointer(2)
 
