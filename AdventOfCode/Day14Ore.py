@@ -51,7 +51,8 @@ class FuelComputer:
         old_dict = self.chemicals[product][1].copy()
         for reagant in old_dict:
             try:
-                self.simple_extraction(product, reagant)
+                #self.simple_extraction(product, reagant)
+                self.reduce_what_we_can(product, reagant)
             except:
                 pass
 
@@ -77,6 +78,26 @@ class FuelComputer:
         self.chemicals[product][1][reagant] = new_num_reag_needed
         # Run simple extraction
         self.simple_extraction(product, reagant)
+
+    def reduce_what_we_can(self, product, reagant):
+        # For a given reagant, reduces its number by as much as possible
+        # This is 'safe' so can replace simple extraction
+        number_reag_needed = self.chemicals[product][1][reagant]
+
+        # number of regants produced in its reaction
+        number_reag_produced = self.chemicals[reagant][0]
+
+        new_num_reag_needed = (number_reag_needed // number_reag_produced)*number_reag_produced
+        remaining_reag = number_reag_needed - new_num_reag_needed
+
+        # Overwrite this value in the dictionary
+        self.chemicals[product][1][reagant] = new_num_reag_needed
+        # Run simple extraction
+        self.simple_extraction(product, reagant)
+
+        # Readd if there are any remaining things
+        if remaining_reag > 0:
+            self.chemicals[product][1][reagant] = remaining_reag
 
     def all_loops(self, product):
         old_dict = {}
@@ -104,8 +125,20 @@ class FuelComputer:
 
         return min(many_guesses), many_guesses
 
+    def reduce_ore_only(self, product, reagant):
+        # Reduces a product if the only component is ore, by rounding up
+        # This is 'safe' as there is no other way to obtain this chemical
+        if reagant != 'ORE' and len(self.chemicals[reagant][1]) == 1:
+            self.non_simple_extraction(product, reagant)
 
-
-
-
+    def all_loops_all_products(self):
+        # This is a 'safe' loop, it doesn't necessarily finish
+        old_chems = {}
+        while self.chemicals != old_chems:
+            old_chems = self.chemicals.copy()
+            for product in self.chemicals.copy():
+                self.all_simple_loops(product)
+            for product in self.chemicals.copy():
+                for reagant in self.chemicals[product][1].copy():
+                    self.reduce_ore_only(product, reagant)
 
